@@ -74,7 +74,10 @@ $(BUILD_DIR)/%.cpp.o: $(SRC_DIR)/%.cpp; $(cxx_recipe)
 $(BUILD_DIR)/%.cpp.o: $(BUILD_DIR)/%.cpp; $(cxx_recipe)
 $(BUILD_DIR)/%.cc.o: $(SRC_DIR)/%.cc; $(cxx_recipe)
 
-.PHONY: clean
+.PHONY: work clean
+
+work:
+	cd $(BUILD_DIR);./$(TARGET_EXEC)
 
 clean:
 	-rm -rf $(BUILD_DIR)

@@ -17,3 +17,5 @@
 
 第一天：
 稿makefile，最后要了个之前跟着做的项目的makefile
+以及git与github
+syntable文件读取 错误：某一行末尾有空格读取失败 如何解决

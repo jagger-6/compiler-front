@@ -4,7 +4,7 @@ Char 3
 If 4
 Else 5
 For 6
-While 7 
+While 7
 return 8
 Void 9
 STRING 50
@@ -17,7 +17,7 @@ NUM 20
 " 11
 / 25
 ( 26
-) 27 
+) 27
 [ 28
 ] 29
 { 30
