@@ -33,7 +33,7 @@ void syntable_read(const char *path) {
             /*cout << tmp.front() << endl;
             cout << tmp.back() << endl;*/
             valuemap.insert({tmp.front(), stoi(tmp.back())});
-            cout << str << endl;
+            // cout << str << endl;
         }
     }
     /*for (map<string, int>::iterator it = valuemap.begin(); it != valuemap.end(); ++it) {
