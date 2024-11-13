@@ -7,5 +7,7 @@
 
 string scanner(string program);
 bool isreserve(string token);
+bool iscommends(string program, int &pos);
+bool ishexadecimal(string program, int &pos);
 
 #endif

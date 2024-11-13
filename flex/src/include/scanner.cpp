@@ -10,41 +10,68 @@ string scanner(string program) {
     string token = "";
     int pos = -1;
     char tmp = program[0];
+    bool isnotes = false;
     while (tmp != '\0') {
         token = "";
         tmp = program[++pos];
-        while (tmp != '\0' && tmp == ' ') {
+        while (tmp != '\0' && (tmp == ' ' || tmp == '\n')) {
             pos++;
             tmp = program[pos];
         }
         switch (tmp) {
         case 'a':
+        case 'A':
         case 'b':
+        case 'B':
         case 'c':
+        case 'C':
         case 'd':
+        case 'D':
         case 'e':
+        case 'E':
         case 'f':
+        case 'F':
         case 'g':
+        case 'G':
         case 'h':
+        case 'H':
         case 'i':
+        case 'I':
         case 'j':
+        case 'J':
         case 'k':
+        case 'K':
         case 'l':
+        case 'L':
         case 'm':
+        case 'M':
         case 'n':
+        case 'N':
         case 'o':
+        case 'O':
         case 'p':
+        case 'P':
         case 'q':
+        case 'Q':
         case 'r':
+        case 'R':
         case 's':
+        case 'S':
         case 't':
+        case 'T':
         case 'u':
+        case 'U':
         case 'v':
+        case 'V':
         case 'w':
+        case 'W':
         case 'x':
+        case 'X':
         case 'y':
+        case 'Y':
         case 'z':
-            while (isdigit(tmp) || isalpha(tmp)) {
+        case 'Z':
+            while (isdigit(tmp) || isalpha(tmp) || tmp == '_') {
                 token += tmp;
                 tmp = program[++pos];
             }
@@ -58,6 +85,20 @@ string scanner(string program) {
             break;
 
         case '0':
+            if (ishexadecimal(program, pos)) {
+                token = "0x";
+                char temp = program[++pos];
+                while (isdigit(temp)) {
+                    token += temp;
+                    temp = program[++pos];
+                }
+                pos--;
+                symbolmap.insert({token, valuemap["NUM"]});
+                str += "(" + to_string(valuemap["NUM"]) + "," + token + ")" + "\n";
+                break;
+            } else {
+                pos--;
+            }
         case '1':
         case '2':
         case '3':
@@ -89,7 +130,33 @@ string scanner(string program) {
             break;
 
         case '/':
-            str += "(" + to_string(valuemap["/"]) + "," + "/" + ")" + "\n";
+            isnotes = iscommends(program, pos);
+            if (isnotes == false)
+                str += "(" + to_string(valuemap["/"]) + "," + "/" + ")" + "\n";
+            break;
+
+        case '(':
+            str += "(" + to_string(valuemap["("]) + "," + "(" + ")" + "\n";
+            break;
+
+        case ')':
+            str += "(" + to_string(valuemap[")"]) + "," + ")" + ")" + "\n";
+            break;
+
+        case '[':
+            str += "(" + to_string(valuemap["["]) + "," + "[" + ")" + "\n";
+            break;
+
+        case ']':
+            str += "(" + to_string(valuemap["]"]) + "," + "]" + ")" + "\n";
+            break;
+
+        case '{':
+            str += "(" + to_string(valuemap["{"]) + "," + "{" + ")" + "\n";
+            break;
+
+        case '}':
+            str += "(" + to_string(valuemap["}"]) + "," + "}" + ")" + "\n";
             break;
 
         case ',':
@@ -135,6 +202,7 @@ string scanner(string program) {
             break;
 
         default:
+            cout << tmp;
             if (tmp == '\0')
                 break;
             assert(false);
@@ -145,6 +213,27 @@ string scanner(string program) {
 
 bool isreserve(string token) {
     if (valuemap.count(token) && token != "id")
+        return true;
+    return false;
+}
+
+bool iscommends(string program, int &pos) {
+    bool isnotes = false;
+    if (program[++pos] == '/') {
+        isnotes = true;
+        pos++;
+        while (program[pos] != '\n' && program[pos] != '\0') {
+            pos++;
+        }
+    } else {
+        pos--;
+    }
+    return isnotes;
+}
+
+bool ishexadecimal(string program, int &pos) {
+    pos++;
+    if (program[pos] == 'x' || program[pos] == 'X')
         return true;
     return false;
 }
