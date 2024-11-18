@@ -1,9 +1,11 @@
 #include "scanner.hpp"
 #include <cassert>
+#include <regex>
 
 extern map<string, int> valuemap;
 
 map<string, int> symbolmap;
+int line = 1;
 
 string scanner(string program) {
     string str = "";
@@ -15,6 +17,7 @@ string scanner(string program) {
         token = "";
         tmp = program[++pos];
         while (tmp != '\0' && (tmp == ' ' || tmp == '\n')) {
+            linenum(tmp);
             pos++;
             tmp = program[pos];
         }
@@ -71,7 +74,7 @@ string scanner(string program) {
         case 'Y':
         case 'z':
         case 'Z':
-            while (isdigit(tmp) || isalpha(tmp) || tmp == '_') {
+            while (isidentifier(tmp)) {
                 token += tmp;
                 tmp = program[++pos];
             }
@@ -88,9 +91,13 @@ string scanner(string program) {
             if (ishexadecimal(program, pos)) {
                 token = "0x";
                 char temp = program[++pos];
-                while (isdigit(temp)) {
+                while (isdigit(temp) || ischarinrange(temp)) {
                     token += temp;
                     temp = program[++pos];
+                }
+                if (isalpha(temp) && !ischarinrange(temp)) {
+                    cerr << "line:" << line << " " << token + temp << " is invalid " << endl;
+                    assert(false);
                 }
                 pos--;
                 symbolmap.insert({token, valuemap["NUM"]});
@@ -99,6 +106,7 @@ string scanner(string program) {
             } else {
                 pos--;
             }
+
         case '1':
         case '2':
         case '3':
@@ -108,6 +116,18 @@ string scanner(string program) {
         case '7':
         case '8':
         case '9':
+            if (isalpha(program[pos + 1])) {
+                string errn = to_string(tmp - '0');
+                errn += program[pos + 1];
+                cerr << "line:" << line << " " << errn << " is invalid " << endl;
+                assert(false);
+            }
+
+            if ((token = doubletoken(program, pos)) != "") {
+                symbolmap.insert({token, valuemap["NUM"]});
+                str += "(" + to_string(valuemap["NUM"]) + "," + token + ")" + "\n";
+                break;
+            }
             while (isdigit(tmp)) {
                 token += tmp;
                 tmp = program[++pos];
@@ -201,10 +221,17 @@ string scanner(string program) {
             }
             break;
 
+        case '"':
+            pos++;
+            token = stringtoken(program, pos);
+            symbolmap.insert({token, valuemap["STRING"]});
+            str += "(" + to_string(valuemap["STRING"]) + "," + token + ")" + "\n";
+            break;
+
         default:
-            cout << tmp;
             if (tmp == '\0')
                 break;
+            cerr << "line:" << line << " invalid token:" << tmp << endl;
             assert(false);
         }
     }
@@ -219,14 +246,31 @@ bool isreserve(string token) {
 
 bool iscommends(string program, int &pos) {
     bool isnotes = false;
-    if (program[++pos] == '/') {
+    int backup = pos;
+    int Line = line;
+    pos++;
+    if (program[pos] == '/') {
         isnotes = true;
         pos++;
         while (program[pos] != '\n' && program[pos] != '\0') {
             pos++;
         }
+        linenum(program[pos]);
+    } else if (program[pos] == '*') {
+        while ((program[pos] != '*' || program[pos + 1] != '/') && program[pos] != '\0') {
+            linenum(program[pos]);
+            pos++;
+        }
+        if (program[pos] == '*' && program[pos + 1] == '/') {
+            isnotes = true;
+            pos++;
+        } else {
+            pos = backup;
+            cerr << "line:" << Line << " not a completed commends" << endl;
+            assert(false);
+        }
     } else {
-        pos--;
+        pos = backup;
     }
     return isnotes;
 }
@@ -236,4 +280,59 @@ bool ishexadecimal(string program, int &pos) {
     if (program[pos] == 'x' || program[pos] == 'X')
         return true;
     return false;
+}
+
+bool ischarinrange(char ch) {
+    int asc = int(ch);
+    return (asc >= 'a' && asc <= 'f') || (asc >= 'A' && asc <= 'F');
+}
+
+bool isidentifier(char tmp) { return (isdigit(tmp) || isalpha(tmp) || tmp == '_'); }
+
+string doubletoken(string program, int &pos) {
+    string token;
+    int backup = pos;
+    while ((isdigit(program[pos])) || program[pos] == '.' || program[pos] == 'e' || program[pos] == 'E' || program[pos] == '+' || program[pos] == '-') {
+        token += program[pos];
+        pos++;
+    }
+    linenum(program[pos]);
+    std::regex e("^[-+]?[0-9]+[.]([0-9]+)?([eE][-+]?[0-9]+)?$"); // 正则表达
+    std::smatch match;
+
+    if (std::regex_search(token, match, e)) {
+        // 输出匹配的子串和分组
+        /*for (size_t i = 0; i < match.size(); ++i) {
+            std::cout << "Match " << i << ": " << match[i] << '\n';
+        }*/
+        pos = backup + match[0].length();
+    } else {
+        pos = backup;
+        return "";
+    }
+    return token;
+}
+
+string stringtoken(string program, int &pos) {
+    string token;
+    int backup = pos;
+    int Line = line;
+    while (program[pos] != '\n' && program[pos] != '"' && program[pos] != '\0') {
+        token += program[pos];
+        pos++;
+    }
+    linenum(program[pos]);
+    if (program[pos] == '"') {
+        return token;
+    } else {
+        pos = backup;
+        cerr << "line:" << Line << " " << token << "is not a completed string" << endl;
+        assert(false);
+        return "";
+    }
+}
+
+void linenum(char temp) {
+    if (temp == '\n')
+        line++;
 }
