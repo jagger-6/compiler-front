@@ -43,3 +43,12 @@ STRING识别
 多行注释识别
 解决标识符不能以数字开头
 种别码加入string
+
+第六天
+图像识别
+sudo apt-get install tesseract-ocr
+sudo apt-get install python-imaging
+pip install pytesseract
+提高图像识别准确度
+图片提取代码末尾有FF标志（剔除）
+建立总makefile与py文件的makefile联系

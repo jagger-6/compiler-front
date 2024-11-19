@@ -13,7 +13,7 @@ string scanner(string program) {
     int pos = -1;
     char tmp = program[0];
     bool isnotes = false;
-    while (tmp != '\0') {
+    while (tmp != '\0' && tmp != EOF) {
         token = "";
         tmp = program[++pos];
         while (tmp != '\0' && (tmp == ' ' || tmp == '\n')) {
@@ -229,7 +229,7 @@ string scanner(string program) {
             break;
 
         default:
-            if (tmp == '\0')
+            if (tmp == '\0' || tmp == EOF)
                 break;
             cerr << "line:" << line << " invalid token:" << tmp << endl;
             assert(false);

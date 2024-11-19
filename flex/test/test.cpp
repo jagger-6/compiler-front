@@ -57,7 +57,7 @@ void syntable_read(const char *path) {
 }
 
 int main() {
-    // syntable_read("./flex/src/include/syntable.txt");
+    // /*syntable_read("./flex/src/include/syntable.txt");*/
     regex pattern("^[-+]?[0-9]+[.]([0-9]+)?([eE][-+]?[0-9]+)?$");
     std::smatch results;
     string str("12.0e+2");
