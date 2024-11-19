@@ -2,21 +2,21 @@
 #include <cassert>
 #include <regex>
 
-extern map<string, int> valuemap;
+extern map<string, int> valuemap; // 种别码表
 
-map<string, int> symbolmap;
-int line = 1;
+map<string, int> symbolmap; // 符号表
+int line = 1;               // 行号，用于定位此法错误位置
 
 string scanner(string program) {
-    string str = "";
+    string str = ""; // 输出结果
     string token = "";
-    int pos = -1;
+    int pos = -1; // 当前字符串索引
     char tmp = program[0];
     bool isnotes = false;
-    while (tmp != '\0' && tmp != EOF) {
+    while (tmp != '\0' && tmp != EOF) { // 读到文件末尾
         token = "";
         tmp = program[++pos];
-        while (tmp != '\0' && (tmp == ' ' || tmp == '\n')) {
+        while (tmp != '\0' && (tmp == ' ' || tmp == '\n')) { // 遇到字符串结尾、空格、换行符则跳过
             linenum(tmp);
             pos++;
             tmp = program[pos];
@@ -74,28 +74,28 @@ string scanner(string program) {
         case 'Y':
         case 'z':
         case 'Z':
-            while (isidentifier(tmp)) {
+            while (isidentifier(tmp)) { // 标识符处理
                 token += tmp;
                 tmp = program[++pos];
             }
             pos--;
-            if (isreserve(token)) {
+            if (isreserve(token)) { // 关键字
                 str += "(" + to_string(valuemap[token]) + "," + token + ")" + "\n";
             } else {
-                symbolmap.insert({token, valuemap["id"]});
+                symbolmap.insert({token, valuemap["id"]}); // 加入到符号表
                 str += "(" + to_string(valuemap["id"]) + "," + token + ")" + "\n";
             }
             break;
 
         case '0':
-            if (ishexadecimal(program, pos)) {
+            if (ishexadecimal(program, pos)) { // 十六进制处理
                 token = "0x";
                 char temp = program[++pos];
                 while (isdigit(temp) || ischarinrange(temp)) {
                     token += temp;
                     temp = program[++pos];
                 }
-                if (isalpha(temp) && !ischarinrange(temp)) {
+                if (isalpha(temp) && !ischarinrange(temp)) { // 合法十六进制判断
                     cerr << "line:" << line << " " << token + temp << " is invalid " << endl;
                     assert(false);
                 }
@@ -116,19 +116,19 @@ string scanner(string program) {
         case '7':
         case '8':
         case '9':
-            if (isalpha(program[pos + 1])) {
+            if (isalpha(program[pos + 1])) { // 非法标识符处理（以数字开头，如1z）
                 string errn = to_string(tmp - '0');
                 errn += program[pos + 1];
                 cerr << "line:" << line << " " << errn << " is invalid " << endl;
                 assert(false);
             }
 
-            if ((token = doubletoken(program, pos)) != "") {
+            if ((token = doubletoken(program, pos)) != "") { // 双精度常量处理
                 symbolmap.insert({token, valuemap["NUM"]});
                 str += "(" + to_string(valuemap["NUM"]) + "," + token + ")" + "\n";
                 break;
             }
-            while (isdigit(tmp)) {
+            while (isdigit(tmp)) { // 普通数
                 token += tmp;
                 tmp = program[++pos];
             }
@@ -150,7 +150,7 @@ string scanner(string program) {
             break;
 
         case '/':
-            isnotes = iscommends(program, pos);
+            isnotes = iscommends(program, pos); // 注释
             if (isnotes == false)
                 str += "(" + to_string(valuemap["/"]) + "," + "/" + ")" + "\n";
             break;
@@ -193,7 +193,7 @@ string scanner(string program) {
 
         case '>':
             pos++;
-            if (program[pos] == '=') {
+            if (program[pos] == '=') { //>=
                 str += "(" + to_string(valuemap[">="]) + "," + ">=" + ")" + "\n";
             } else {
                 pos--;
@@ -203,7 +203,7 @@ string scanner(string program) {
 
         case '<':
             pos++;
-            if (program[pos] == '=') {
+            if (program[pos] == '=') { //<=
                 str += "(" + to_string(valuemap["<="]) + "," + "<=" + ")" + "\n";
             } else {
                 pos--;
@@ -213,7 +213,7 @@ string scanner(string program) {
 
         case '=':
             pos++;
-            if (program[pos] == '=') {
+            if (program[pos] == '=') { //==
                 str += "(" + to_string(valuemap["=="]) + "," + "==" + ")" + "\n";
             } else {
                 pos--;
@@ -221,9 +221,19 @@ string scanner(string program) {
             }
             break;
 
+        case '!':
+            pos++;
+            if (program[pos] == '=') { //!=
+                str += "(" + to_string(valuemap["!="]) + "," + "!=" + ")" + "\n";
+            } else {
+                pos--;
+                str += "(" + to_string(valuemap["!"]) + "," + "!" + ")" + "\n";
+            }
+            break;
+
         case '"':
             pos++;
-            token = stringtoken(program, pos);
+            token = stringtoken(program, pos); // 字符串常量处理
             symbolmap.insert({token, valuemap["STRING"]});
             str += "(" + to_string(valuemap["STRING"]) + "," + token + ")" + "\n";
             break;
@@ -231,6 +241,7 @@ string scanner(string program) {
         default:
             if (tmp == '\0' || tmp == EOF)
                 break;
+            // 非法字符处理
             cerr << "line:" << line << " invalid token:" << tmp << endl;
             assert(false);
         }
@@ -239,24 +250,24 @@ string scanner(string program) {
 }
 
 bool isreserve(string token) {
-    if (valuemap.count(token) && token != "id")
+    if (valuemap.count(token) && token != "id") // 排除id为正常标识符却被识别成关键字的情况
         return true;
     return false;
 }
 
 bool iscommends(string program, int &pos) {
     bool isnotes = false;
-    int backup = pos;
+    int backup = pos; // 备份当前索引位置
     int Line = line;
     pos++;
-    if (program[pos] == '/') {
+    if (program[pos] == '/') { // 行注释
         isnotes = true;
         pos++;
         while (program[pos] != '\n' && program[pos] != '\0') {
             pos++;
         }
         linenum(program[pos]);
-    } else if (program[pos] == '*') {
+    } else if (program[pos] == '*') { // 块注释
         while ((program[pos] != '*' || program[pos + 1] != '/') && program[pos] != '\0') {
             linenum(program[pos]);
             pos++;
@@ -287,17 +298,21 @@ bool ischarinrange(char ch) {
     return (asc >= 'a' && asc <= 'f') || (asc >= 'A' && asc <= 'F');
 }
 
-bool isidentifier(char tmp) { return (isdigit(tmp) || isalpha(tmp) || tmp == '_'); }
+bool isidentifier(char tmp) {
+    // 以字母开头，数字、字母以及下划线组成的标识符
+    return (isdigit(tmp) || isalpha(tmp) || tmp == '_');
+}
 
 string doubletoken(string program, int &pos) {
     string token;
     int backup = pos;
+    // 先读取满足双精度常量的字符串（有数字、.、E、e、+、-即可）
     while ((isdigit(program[pos])) || program[pos] == '.' || program[pos] == 'e' || program[pos] == 'E' || program[pos] == '+' || program[pos] == '-') {
         token += program[pos];
         pos++;
     }
     linenum(program[pos]);
-    std::regex e("^[-+]?[0-9]+[.]([0-9]+)?([eE][-+]?[0-9]+)?$"); // 正则表达
+    std::regex e("^[-+]?[0-9]+[.]([0-9]+)?([eE][-+]?[0-9]+)?$"); // 正则表达式判断是否为合法的双精度常量
     std::smatch match;
 
     if (std::regex_search(token, match, e)) {
@@ -317,7 +332,7 @@ string stringtoken(string program, int &pos) {
     string token;
     int backup = pos;
     int Line = line;
-    while (program[pos] != '\n' && program[pos] != '"' && program[pos] != '\0') {
+    while (program[pos] != '\n' && program[pos] != '"' && program[pos] != '\0') { // 遇到这些字符时停止
         token += program[pos];
         pos++;
     }
@@ -333,6 +348,7 @@ string stringtoken(string program, int &pos) {
 }
 
 void linenum(char temp) {
+    // 遇到换行符，行号自增
     if (temp == '\n')
         line++;
 }

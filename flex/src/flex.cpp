@@ -12,6 +12,7 @@ string readfile(const char *path) {
     if (!fin.is_open()) {
         cerr << "Failed to open " << path << endl;
     } else {
+        // 读取文件所有内容
         string s((istreambuf_iterator<char>(fin)), istreambuf_iterator<char>());
         str = s;
     }
@@ -35,9 +36,9 @@ void writefile(string str, const char *path) {
 
 int main(int argc, char *argv[]) {
     assert(argc == 3);
-    auto input = argv[1];
-    auto output = argv[2];
-    syntable_read("../src/include/syntable.txt");
+    auto input = argv[1];                         // 源代码输入
+    auto output = argv[2];                        // 结果输出到文件中
+    syntable_read("../src/include/syntable.txt"); // 种别码文件
     writefile(scanner(readfile(input)), output);
     return 0;
 }

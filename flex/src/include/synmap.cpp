@@ -1,6 +1,6 @@
 #include "synmap.hpp"
 
-map<string, int> valuemap;
+map<string, int> valuemap; // 种别码表
 
 // 使用字符分割
 void stringsplit(const string &str, const char split, vector<string> &res) {
@@ -27,9 +27,9 @@ void syntable_read(const char *path) {
     if (!fin.is_open()) {
         cerr << "Failed to open " << path << endl;
     } else {
-        while (getline(fin, str)) {
+        while (getline(fin, str)) { // 一行一行读取
             vector<string> tmp;
-            stringsplit(str, ' ', tmp);
+            stringsplit(str, ' ', tmp); // 以空格为分隔符
             /*cout << tmp.front() << endl;
             cout << tmp.back() << endl;*/
             valuemap.insert({tmp.front(), stoi(tmp.back())});
