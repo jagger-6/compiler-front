@@ -5,7 +5,7 @@
 extern map<string, int> valuemap; // 种别码表
 
 map<string, int> symbolmap; // 符号表
-int line = 1;               // 行号，用于定位此法错误位置
+int line = 1;               // 行号，用于定位词法错误位置
 
 string scanner(string program) {
     string str = ""; // 输出结果

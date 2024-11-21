@@ -1,21 +1,3 @@
-int main(){
-
 int x=1;
-
-int y_=1+2*3/4;
-
-int z=0x15df;//not good;
-int X=1.2e8;
-
-/*int int;
-
-/*good;
-
-*/
-
-string name="dsagre@$%#@$5";
-if(23this
-
-*/
-
-}
+/*int 
+string name="asfdgf;
