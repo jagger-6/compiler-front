@@ -8,6 +8,7 @@
         "vector": "cpp",
         "string_view": "cpp",
         "ostream": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "iostream": "cpp"
     }
 }

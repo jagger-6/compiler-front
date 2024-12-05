@@ -281,6 +281,6 @@ void erasedirect(int posi) {
 }
 
 int main(int argc, char *argv[]) {
-    grammar_read("./data1.txt"); // 文法文件
+    cout << "\u03B5";
     return 0;
 }

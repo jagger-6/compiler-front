@@ -69,7 +69,8 @@ void grammar_read(const char *path) {
         }
         getnoterminators();
         factorization();
-        cout << "转换后的文法为:" << endl;
+        rules = sortRules(rules, noterminators);
+        cout << "提取公共左因子后的文法为:" << endl;
         for (const auto &rule : rules) {
             cout << rule.left << " -> ";
             for (auto it = rule.right.begin(); it != rule.right.end(); ++it) {
@@ -80,7 +81,7 @@ void grammar_read(const char *path) {
             cout << endl;
         }
         eliminatelr();
-        cout << "转换后的文法为:" << endl;
+        cout << "消除左递归后的文法为:" << endl;
         for (const auto &rule : rules) {
             cout << rule.left << " -> ";
             for (auto it = rule.right.begin(); it != rule.right.end(); ++it) {
@@ -97,9 +98,31 @@ void grammar_read(const char *path) {
 }
 
 void getnoterminators() { // 终结符排序
+    noterminators.clear();
     for (auto it : rules) {
-        noterminators.push_back(it.left);
+        if (!noterminators.empty()) {
+            bool flag = true;
+            for (auto i : noterminators) {
+                if (it.left == i) {
+                    flag = false;
+                    break;
+                }
+            }
+            if (flag) {
+                noterminators.push_back(it.left);
+            }
+        } else {
+            noterminators.push_back(it.left);
+        }
+        for (auto IT : rules) {
+            if (IT.left == it.left + "'") {
+                noterminators.push_back(IT.left);
+                break;
+            }
+        }
     }
+    /*for (auto it : noterminators)
+        cout << it << endl;*/
 }
 
 void factorization() {
@@ -157,7 +180,7 @@ void factorization() {
                 // 为新非终结符创建规则，存储所有后缀
                 set<string> newRuleSet;
                 for (const auto &suffix : suffixes) {
-                    newRuleSet.insert(suffix.empty() ? "Σ" : suffix); // 空后缀替换为 ε
+                    newRuleSet.insert(suffix.empty() ? "$" : suffix); // 空后缀替换为 $
                 }
                 rules.push_back({newNonTerminal, newRuleSet}); // 新的规则添加到文法中
             }
@@ -232,6 +255,28 @@ void erasedirect(int posi) {
     for (const auto &rule : directRecursion) {
         newRules.insert(rule + newNonTerminal); // 原后缀追加新非终结符
     }
-    newRules.insert("Σ");                        // 添加 ε（空规则）
+    newRules.insert("$");                        // 添加 $（空规则）
     rules.push_back({newNonTerminal, newRules}); // 将新非终结符及其规则加入文法
+}
+
+// 根据 nonTerminals 的顺序对 rules 进行排序
+vector<node> sortRules(const vector<node> &rules, const vector<string> &nonTerminals) {
+    // 创建一个映射来存储每个非终结符对应的规则
+    unordered_map<string, vector<node>> ruleMap;
+
+    // 将所有规则按非终结符分类
+    for (const auto &rule : rules) {
+        ruleMap[rule.left].push_back(rule);
+    }
+
+    // 创建一个新的规则列表，按照 nonTerminals 的顺序添加规则
+    vector<node> sortedRules;
+    for (const auto &nt : nonTerminals) {
+        if (ruleMap.find(nt) != ruleMap.end()) {
+            // 将该非终结符对应的所有规则添加到新的规则列表中
+            sortedRules.insert(sortedRules.end(), ruleMap[nt].begin(), ruleMap[nt].end());
+        }
+    }
+
+    return sortedRules;
 }
