@@ -2,6 +2,7 @@
 
 vector<node> rules;
 vector<string> noterminators; // 非终结符
+string start;
 
 // 使用字符串分割
 void stringsplit_string(const string &str, const string split, vector<string> &res) {
@@ -67,6 +68,7 @@ void grammar_read(const char *path) {
             r.right = prule;
             rules.push_back(r);
         }
+        start = rules[0].left;
         getnoterminators();
         factorization();
         rules = sortRules(rules, noterminators);

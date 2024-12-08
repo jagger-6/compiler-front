@@ -1,71 +1,93 @@
-#include "include/FirstFollow.hpp"
+#include "include/LL1analysis.hpp"
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <stack>
 #include <streambuf>
-#include <unordered_set>
 using namespace std;
 
 #define grammarfile "../src/include/grammar.txt"
 
-// 插入新元素到集合，并返回是否进行了插入
-bool insertIfNew(unordered_set<string> &set, const string &item) { return set.insert(item).second; }
+// 分析栈模拟函数
+void parseString(const unordered_map<string, unordered_map<string, string>> &table, const string &input) {
+    stack<string> analysisStack;
+    analysisStack.push("#");   // 结束符
+    analysisStack.push(start); // 起始符号
 
-// 构建 LL(1) 分析表
-void buildParseTable(const vector<node> &rules, const unordered_map<string, set<string>> &first, const unordered_map<string, set<string>> &follow,
-                     unordered_map<string, unordered_map<string, string>> &table, const vector<string> &nonTerminals) {
+    string remainingInput = input + "#"; // 加上结束符号
+    size_t step = 1;
 
-    for (const auto &rule : rules) {
-        for (const string &production : rule.right) {
-            string A = rule.left;
-            size_t i = 0;
-            unordered_set<string> lookaheads;
+    cout << "步骤\t分析栈\t当前输入\t剩余输入串\t所用产生式" << endl;
 
-            // 如果产生式为空或为$，则使用FOLLOW(A)作为lookahead
-            if (production.empty() || production == "$") {
-                // 使用 insert 方法将 FOLLOW(A) 的所有元素插入到 lookaheads 中
-                lookaheads.insert(follow.at(A).begin(), follow.at(A).end());
+    bool result = false;
+
+    while (!analysisStack.empty()) {
+        string top = analysisStack.top();      // 栈顶元素
+        char currentChar = remainingInput[0];  // 当前输入字符
+        string currentCharStr(1, currentChar); // 当前字符转为字符串
+
+        // 打印当前状态
+        cout << step++ << "\t";
+        stack<string> tempStack = analysisStack;
+        string stackContent;
+        while (!tempStack.empty()) {
+            stackContent = tempStack.top() + stackContent;
+            tempStack.pop();
+        }
+        cout << stackContent << "\t\t" << currentChar << "\t\t" << remainingInput << "\t\t";
+
+        // 栈顶符号是终结符或 #
+        if (top == "#" || !isNonTerminal(top, noterminators)) { // 判断是否为非终结符
+            if (top == "#" && remainingInput == "#") {
+                result = true;
+            }
+            if (top[0] == currentChar) { // 匹配成功
+                analysisStack.pop();
+                remainingInput = remainingInput.substr(1);
+                cout << "匹配" << endl;
             } else {
-                while (i < production.size()) {
-                    string X(1, production[i]);
-                    if (!isNonTerminal(X, nonTerminals)) {
-                        // 如果 X 是终端，则直接加入到 lookaheads 并停止检查
-                        insertIfNew(lookaheads, X);
-                        break;
-                    } else {
-                        // 如果 X 是非终结符，将 FIRST(X)\{$} 加入到 lookaheads
-                        for (const string &f : first.at(X)) {
-                            if (f != "$" && insertIfNew(lookaheads, f)) {
+                cout << "错误：符号不匹配！" << endl;
+                break;
+            }
+        }
+        // 栈顶符号是非终结符
+        else {
+            auto rowIt = table.find(top); // 查找栈顶非终结符对应的表行
+            if (rowIt != table.end()) {
+                auto colIt = rowIt->second.find(currentCharStr); // 查找当前输入符号对应的列
+                if (colIt != rowIt->second.end()) {
+                    string production = colIt->second;
+                    analysisStack.pop();     // 弹出当前非终结符
+                    if (production != "$") { // 空串不需要入栈
+                        for (auto it = production.rbegin(); it != production.rend(); ++it) {
+                            if ((it + 1) != production.rend() && *it == '\'' && isupper(*(it + 1))) {
+                                string tmp = string(1, *(it + 1));
+                                tmp += "'";
+                                analysisStack.push(tmp);
+                                it++;
+                                // cout << tmp << endl;
+                            } else {
+                                analysisStack.push(string(1, *it));
+                                // cout << *it << " " << endl;
                             }
                         }
-                        if (first.at(X).find("$") == first.at(X).end())
-                            break; // 如果 FIRST(X) 不包含 $，则停止检查
                     }
-                    ++i;
+                    cout << top << " -> " << production << endl;
+                } else {
+                    cout << "错误：当前输入符号未找到匹配的产生式！" << endl;
+                    break;
                 }
-                // 如果所有 X 都可以推导出 $ 或最后一个符号能推导出 $，则将 FOLLOW(A) 加入到 lookaheads
-                if (i == production.size() || (i < production.size() && first.at(string(1, production.back())).find("$") != first.at(string(1, production.back())).end())) {
-                    // 同样使用 insert 方法将 FOLLOW(A) 的所有元素插入到 lookaheads 中
-                    lookaheads.insert(follow.at(A).begin(), follow.at(A).end());
-                }
-            }
-
-            // 将产生式添加到解析表中
-            for (const string &lookahead : lookaheads) {
-                table[A][lookahead] = production;
+            } else {
+                cout << "错误：栈顶符号未找到匹配的行！" << endl;
+                break;
             }
         }
     }
-}
 
-// 打印 LL(1) 分析表
-void printParseTable(const unordered_map<string, unordered_map<string, string>> &table) {
-    cout << "\nLL(1) 分析表:" << endl;
-    for (const auto &lhsPair : table) {
-        cout << setw(2) << left << lhsPair.first << ": " << endl;
-        for (const auto &rhsPair : lhsPair.second) {
-            cout << "  " << rhsPair.first << " -> " << rhsPair.second << endl;
-        }
+    if (result) {
+        cout << "分析成功！" << endl;
+    } else {
+        cout << "分析失败！" << endl;
     }
 }
 
@@ -150,6 +172,14 @@ int main(int argc, char *argv[]) {
 
     // 打印 LL(1) 分析表
     printParseTable(table);
+
+    // 输入要分析的字符串
+    string input;
+    cout << "请输入要分析的字符串: ";
+    cin >> input;
+
+    // 调用分析函数
+    parseString(table, input);
 
     return 0;
 }

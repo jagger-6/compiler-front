@@ -21,6 +21,7 @@ struct node {
 
 extern vector<node> rules;
 extern vector<string> noterminators; // 非终结符
+extern string start;
 
 void stringsplit_string(const string &str, const string split, vector<string> &res); // 切割字符串
 void stringsplit_char(const string &str, const char split, set<string> &res);        // 使用字符分割
