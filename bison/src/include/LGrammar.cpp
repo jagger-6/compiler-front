@@ -10,7 +10,7 @@ void stringsplit_string(const string &str, const string split, vector<string> &r
         return;
 
     size_t pos = 0;
-    while (str[pos] != '\0') {
+    while (str[pos] != '\0') { // 未到字符串末尾
         if (str[pos] == split[0]) {
             for (int i = 1; i < split.length(); i++) {
                 if (str[pos + i] == split[i] && str[pos + i] != '\0') {
@@ -68,10 +68,10 @@ void grammar_read(const char *path) {
             r.right = prule;
             rules.push_back(r);
         }
-        start = rules[0].left;
-        getnoterminators();
-        factorization();
-        rules = sortRules(rules, noterminators);
+        start = rules[0].left;                   // 文法开始符
+        getnoterminators();                      // 获取非终结符集合
+        factorization();                         // 提取公共左因子
+        rules = sortRules(rules, noterminators); // 重新排序
         cout << "提取公共左因子后的文法为:" << endl;
         for (const auto &rule : rules) {
             cout << rule.left << " -> ";
@@ -82,7 +82,7 @@ void grammar_read(const char *path) {
             }
             cout << endl;
         }
-        eliminatelr();
+        eliminatelr(); // 消除左递归（包括直接和间接）
         cout << "消除左递归后的文法为:" << endl;
         for (const auto &rule : rules) {
             cout << rule.left << " -> ";

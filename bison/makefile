@@ -78,7 +78,7 @@ $(BUILD_DIR)/%.cc.o: $(SRC_DIR)/%.cc; $(cxx_recipe)
 .PHONY: work clean
 
 work:
-	@cd $(BUILD_DIR);./compiler $(TOP_DIR)/test/in.txt $(TOP_DIR)/test/out.txt
+	@cd $(BUILD_DIR);./compiler
 
 clean:
 	-rm -rf $(BUILD_DIR)
