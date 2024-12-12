@@ -1,6 +1,6 @@
 #include "Analy.hpp"
+#include <iomanip>
 
-// 分析栈模拟函数
 void parseString(const unordered_map<string, unordered_map<string, string>> &table, const string &input) {
     stack<string> analysisStack;
     analysisStack.push("#");   // 结束符
@@ -9,7 +9,8 @@ void parseString(const unordered_map<string, unordered_map<string, string>> &tab
     string remainingInput = input + "#"; // 加上结束符号
     size_t step = 1;
 
-    cout << "步骤\t分析栈\t\t当前输入\t剩余输入串\t所用产生式" << endl;
+    cout << left; // 设置左对齐
+    cout << setw(5) << "步骤" << setw(20) << "分析栈" << setw(25) << "当前输入" << setw(25) << "剩余输入串" << setw(30) << "所用产生式" << endl;
 
     bool result = false;
 
@@ -19,14 +20,14 @@ void parseString(const unordered_map<string, unordered_map<string, string>> &tab
         string currentCharStr(1, currentChar); // 当前字符转为字符串
 
         // 打印当前状态
-        cout << step++ << "\t";
+        cout << setw(5) << step++ << setw(20);
         stack<string> tempStack = analysisStack;
         string stackContent;
         while (!tempStack.empty()) {
-            stackContent = tempStack.top() + stackContent;
+            stackContent = tempStack.top() + (tempStack.size() > 1 ? " " : "") + stackContent;
             tempStack.pop();
         }
-        cout << stackContent << "\t\t" << currentChar << "\t\t" << remainingInput << "\t\t";
+        cout << setw(20) << stackContent << setw(20) << currentChar << setw(20) << remainingInput;
 
         // 栈顶符号是终结符或 #
         if (top == "#" || !isNonTerminal(top, noterminators)) { // 判断是否为非终结符
@@ -57,10 +58,8 @@ void parseString(const unordered_map<string, unordered_map<string, string>> &tab
                                 tmp += "'";
                                 analysisStack.push(tmp);
                                 it++;
-                                // cout << tmp << endl;
                             } else {
                                 analysisStack.push(string(1, *it));
-                                // cout << *it << " " << endl;
                             }
                         }
                     }
